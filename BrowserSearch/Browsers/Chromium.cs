@@ -222,8 +222,16 @@ namespace BrowserSearch.Browsers
             using SqliteDataReader reader = ExecuteCmd(_historyDbConnection, historyReadCmd);
             while (reader.Read())
             {
+                // The URL is essential, so skip the entry if it's missing (System.DBNull).
+                // The title may legitimately be NULL for some entries (e.g. redirects),
+                // in which case we fall back to an empty string instead of crashing on the cast.
+                if (reader.IsDBNull(0))
+                {
+                    continue;
+                }
+
                 string url = (string)reader[0];
-                string title = (string)reader[1];
+                string title = reader.IsDBNull(1) ? string.Empty : (string)reader[1];
 
                 HistoryResult result = new()
                 {
